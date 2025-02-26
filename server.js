@@ -21,17 +21,17 @@ app.use(cors({ origin: 'http://localhost:3000' }));
 //   });
 // });
 
-async function getComments(req, res) {
+async function getEmployees(req, res) {
   try {
       const db = await connectToDatabase();
-      const comments = await db.collection("employees").find().toArray();
-      res.json(comments);
+      const employees = await db.collection("employees").find().toArray();
+      res.json(employees);
   } catch (error) {
       res.status(500).json({ error: error.message });
   }
 }
 
-app.get("/comments", getComments);
+app.get("/employees", getEmployees);
 
 app.listen(port, function() {
   console.log(`App listening on port ${port}`);
