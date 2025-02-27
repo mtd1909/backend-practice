@@ -5,8 +5,6 @@ const cors = require('cors')
 const connectToDatabase = require('../database')
 require('dotenv').config()
 
-user.use(cors({ origin: 'http://localhost:3000' }));
-
 user.get("/", async (req, res) => {
   try {
       const db = await connectToDatabase();
