@@ -17,19 +17,9 @@ user.get("/", async (req, res) => {
 user.post("/", async (req, res) => {
   try {
     const db = await connectToDatabase();
-    const newEmployee = req.body;
-
-    console.log("Dữ liệu gửi lên:", newEmployee);
-
-    const result = await db.collection("employees").insertOne(newEmployee);
-    console.log("Kết quả insert:", result);
-
-    // Kiểm tra nếu insertedId không tồn tại
-    if (!result.insertedId) {
-        return res.status(500).json({ error: "Không thể thêm user, insertedId bị undefined" });
-    }
-
-    res.status(201).json({ _id: result.insertedId, ...newEmployee });
+    const newUser = req.body;
+    const result = await db.collection("users").insertOne(newUser);
+    res.status(201).json({ _id: result.insertedId, ...newUser });
 } catch (error) {
     console.error("Lỗi:", error);
     res.status(500).json({ error: error.message });
