@@ -7,8 +7,8 @@ require('dotenv').config()
 user.get("/", async (req, res) => {
   try {
       const db = await connectToDatabase();
-      const employees = await db.collection("employees").find().toArray();
-      res.json(employees);
+      const users = await db.collection("users").find().toArray();
+      res.json(users);
   } catch (error) {
       res.status(500).json({ error: error.message });
   }
@@ -16,10 +16,10 @@ user.get("/", async (req, res) => {
 
 user.post("/", async (req, res) => {
   try {
-      const db = await connectToDatabase();
-      const newEmployee = req.body;
-      const result = await db.collection("employees").insertOne(newEmployee);
-      res.status(201).json(result);
+    const db = await connectToDatabase();
+    const newUser = req.body;
+    const result = await db.collection("users").insertOne(newUser);
+    res.status(201).json({ _id: result.insertedId, ...newUser });
   } catch (error) {
       res.status(500).json({ error: error.message });
   }
