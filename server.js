@@ -2,13 +2,13 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 
-app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(cors({ origin: '*' }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const user = require('./routes/user')
-app.use('/users', user);
+const userRoutes = require('./src/routes/user')
+app.use('/users', userRoutes);
 
 const port = process.env.PORT || 8080
 app.listen(port, function() {
