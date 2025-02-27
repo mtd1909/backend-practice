@@ -14,7 +14,7 @@ user.get("/", async (req, res) => {
   }
 });
 
-user.post("/employees", async (req, res) => {
+user.post("/", async (req, res) => {
   try {
       const db = await connectToDatabase();
       const newEmployee = req.body;
