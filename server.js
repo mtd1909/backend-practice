@@ -4,6 +4,9 @@ const cors = require('cors')
 
 app.use(cors({ origin: 'http://localhost:3000' }));
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 const user = require('./routes/user')
 app.use('/users', user);
 
