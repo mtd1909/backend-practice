@@ -81,7 +81,7 @@ const updateUser = async (req, res) => {
   }
 };
 
-// 🟢 Hàm cập nhật user
+// 🟢 Hàm xoá user
 const deleteUser = async (req, res) => {
   try {
     const db = await connectToDatabase();
@@ -93,16 +93,13 @@ const deleteUser = async (req, res) => {
         message: "ID không hợp lệ",
       });
     }
-
     const result = await db.collection("users").deleteOne({ _id: new ObjectId(id) });
-
     if (result.deletedCount === 0) {
       return res.status(404).json({
         code: 404,
         message: "Không tìm thấy người dùng",
       });
     }
-
     res.json({
       code: 200,
       message: "Xóa người dùng thành công",
