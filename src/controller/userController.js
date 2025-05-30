@@ -1,10 +1,11 @@
-const connectToDatabase = require("../config/database"); // Kết nối DB
+const connectToDatabase = require("../config/database"); 
+const { sendSuccess, sendError } = require("../helper/response")
 const { ObjectId } = require("mongodb");
 
 // 🟢 Hàm lấy danh sách users
 const getUser = async (req, res) => {
   try {
-    const db = await connectToDatabase();
+  const db = await connectToDatabase();
     const users = await db.collection("users").find().toArray();
     
     res.status(200).json({
@@ -47,7 +48,6 @@ const createUser = async (req, res) => {
 // 🟢 Hàm cập nhật user
 const updateUser = async (req, res) => {
   try {
-    const db = await connectToDatabase();
     const { id } = req.params;
     const updatedUser = req.body;
     if (!ObjectId.isValid(id)) {
@@ -84,7 +84,6 @@ const updateUser = async (req, res) => {
 // 🟢 Hàm xoá user
 const deleteUser = async (req, res) => {
   try {
-    const db = await connectToDatabase();
     const { id } = req.params;
 
     if (!ObjectId.isValid(id)) {
