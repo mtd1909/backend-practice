@@ -69,7 +69,7 @@ app.get("/auth/google/callback", passport.authenticate("google", { failureRedire
 	const token = req.user.accessToken;
   console.log(token);
   
-	res.redirect(`https://appchat-mtd.vercel.app/auth?token=${token}`);
+	res.redirect(`https://appchat-mtd.vercel.app/auth`);
 });
 
 const userRoutes = require("./src/routes/user");
