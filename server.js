@@ -57,6 +57,8 @@ passport.use(
 				};
 				await users.insertOne(user);
 			}
+			const yourAccessToken = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
+			user.accessToken = yourAccessToken;
 			return done(null, profile);
 		}
 	)
@@ -64,7 +66,8 @@ passport.use(
 
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 app.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), (req, res) => {
-	res.redirect("/");
+	const token = req.user.accessToken;
+	res.redirect(`https://appchat-mtd.vercel.app/auth?token=${token}`);
 });
 
 const userRoutes = require("./src/routes/user");
