@@ -113,5 +113,21 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const users = db.collection("users");
+    const user = await users.findOne(
+      { _id: new ObjectId(req.user.id) },
+      { projection: { password: 0 } } // không trả password
+    );
+    if (!user) return sendError(res, 404, "User not found");
+    return sendSuccess(res, user);
+  } catch (error) {
+    console.error("Get profile error:", error);
+    return sendError(res, 500, "Internal server error");
+  }
+};
+
 // 🟢 Xuất các function để dùng trong routes
-module.exports = { getUser, createUser, updateUser, deleteUser };
+module.exports = { getUser, createUser, updateUser, deleteUser, getProfile };
