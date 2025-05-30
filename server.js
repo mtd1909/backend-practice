@@ -45,31 +45,47 @@ passport.use(
 			callbackURL: "https://backend-practice-production-66bb.up.railway.app/auth/google/callback",
 		},
 		async (accessToken, refreshToken, profile, done) => {
-			const db = await connectToDatabase();
-			const users = db.collection("users");
-			let user = await users.findOne({ googleId: profile.id });
-			if (!user) {
-				user = {
-					googleId: profile.id,
-					displayName: profile.displayName,
-					email: profile.emails[0].value,
-					avatar: profile.photos[0].value,
-				};
-				await users.insertOne(user);
+			try {
+				const db = await connectToDatabase();
+				const users = db.collection("users");
+
+				let user = await users.findOne({ googleId: profile.id });
+
+				if (!user) {
+					user = {
+						googleId: profile.id,
+						displayName: profile.displayName,
+						email: profile.emails[0].value,
+						avatar: profile.photos[0].value,
+					};
+					await users.insertOne(user);
+				}
+
+				// JWT token (tùy chọn nếu bạn muốn trả về)
+				const jwt = require("jsonwebtoken");
+				const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+					expiresIn: "1d",
+				});
+				user.accessToken = token;
+
+				return done(null, user);
+			} catch (error) {
+				console.error("🔥 Google Strategy Error:", error);
+				return done(error, null);
 			}
-			const yourAccessToken = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
-			user.accessToken = yourAccessToken;
-			return done(null, profile);
 		}
 	)
 );
 
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 app.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), (req, res) => {
-	const token = req.user.accessToken;
-  console.log(token);
-  
-	res.redirect(`https://appchat-mtd.vercel.app/auth`);
+	try {
+		const token = req.user.accessToken;
+		res.redirect(`https://appchat-mtd.vercel.app/auth?token=${token}`);
+	} catch (err) {
+		console.error("❌ Callback error:", err);
+		res.status(500).send("Internal Server Error");
+	}
 });
 
 const userRoutes = require("./src/routes/user");
