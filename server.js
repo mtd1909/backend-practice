@@ -6,6 +6,7 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const connectToDatabase = require("./src/config/database");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 
 app.use(cors({ origin: "*" }));
 
