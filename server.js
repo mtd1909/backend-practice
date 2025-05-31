@@ -58,16 +58,16 @@ passport.use(
 				};
 				await users.insertOne(user);
 			}
-			const jwtToken = require("jsonwebtoken").sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
+			const jwtToken = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
 			user.jwtToken = jwtToken;
-			return done(null, profile);
+			return done(null, user);
 		}
 	)
 );
 
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-app.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), (req, res) => {
+app.get("/auth/google/callback", passport.authenticate("google", { session: false }), (req, res) => {
   const token = req.user.jwtToken;
   if (!token) return res.status(500).json({ message: "No token generated" });
 	res.redirect(`https://appchat-mtd.vercel.app/auth?token=${token}`);
