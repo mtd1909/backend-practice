@@ -70,7 +70,7 @@ app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "em
 app.get("/auth/google/callback", passport.authenticate("google", { session: false }), (req, res) => {
   const token = req.user.jwtToken;
   if (!token) return res.status(500).json({ message: "No token generated" });
-	res.redirect(`https://appchat-mtd.vercel.app/auth?token=${token}`);
+	res.redirect(`https://appchat-mtd.vercel.app/auth?access_token=${token}`);
 });
 
 const userRoutes = require("./src/routes/user");
