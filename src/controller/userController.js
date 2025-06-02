@@ -1,5 +1,8 @@
 const connectToDatabase = require("../config/database"); 
 const { sendSuccess, sendError } = require("../helper/response")
+const fs = require("fs");
+const path = require("path");
+const multer = require("multer");
 const { ObjectId } = require("mongodb");
 
 // 🟢 Hàm lấy danh sách users
@@ -129,5 +132,43 @@ const getProfile = async (req, res) => {
   }
 };
 
+const storage = multer.diskStorage({
+  destination: "public/uploads",
+  filename: (req, file, cb) => {
+    const filename = Date.now() + "-" + file.originalname;
+    cb(null, filename);
+  },
+});
+const upload = multer({ storage });
+
+// Upload avatar (xoá avatar cũ nếu có)
+const uploadAvatar = [
+  upload.single("avatar"),
+  async (req, res) => {
+    const userId = req.body.userId;
+    const db = await connectToDatabase();
+    const users = db.collection("users");
+
+    const user = await users.findOne({ _id: new require("mongodb").ObjectId(userId) });
+    if (!user) return sendError(res, 404, "User not found");
+
+    // Nếu có avatar cũ thì xóa đi
+    if (user.avatar) {
+      const oldPath = path.join("public/uploads", user.avatar);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    // Lưu avatar mới vào DB
+    const newAvatar = req.file.filename;
+    await users.updateOne(
+      { _id: user._id },
+      { $set: { avatar: newAvatar } }
+    );
+    const url = `${req.protocol}://${req.get("host")}/uploads/${newAvatar}`;
+    return sendSuccess(res, { url });
+  }
+]
 // 🟢 Xuất các function để dùng trong routes
-module.exports = { getUser, createUser, updateUser, deleteUser, getProfile };
+module.exports = { getUser, createUser, updateUser, deleteUser, getProfile, uploadAvatar };
