@@ -55,6 +55,7 @@ passport.use(
 					displayName: profile.displayName,
 					email: profile.emails[0].value,
 					avatar: profile.photos[0].value,
+          date_created: new Date()
 				};
 				await users.insertOne(user);
 			}

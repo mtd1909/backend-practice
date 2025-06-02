@@ -121,11 +121,11 @@ const getProfile = async (req, res) => {
       { _id: new ObjectId(req.user.id) },
       { projection: { password: 0 } } // không trả password
     );
-    if (!user) return sendError(res, 404, "User not found");
+    if (!user) return sendError(res, 404, "User not found.");
     return sendSuccess(res, user);
   } catch (error) {
-    console.error("Get profile error:", error);
-    return sendError(res, 500, "Internal server error");
+    console.error("Get profile error:", err);
+    return sendError(res, 500, "Internal server error.");
   }
 };
 
