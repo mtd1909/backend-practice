@@ -56,10 +56,10 @@ passport.use(
 					email: profile.emails[0].value,
 					avatar: profile.photos[0].value,
 				};
-				await users.insertOne(user);
+				const result = await users.insertOne(user);
+        user = await users.findOne({ _id: result.insertedId });
 			}
 			const jwtToken = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
 			user.jwtToken = jwtToken;
 			return done(null, user);
 		}

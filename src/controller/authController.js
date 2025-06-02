@@ -47,7 +47,6 @@ const login = async (req, res) => {
     );
     return sendSuccess(res, { accessToken, refreshToken });
   } catch (err) {
-    console.error("Login error:", err);
     return sendError(res, 500, "Internal server error");
   }
 };
@@ -91,9 +90,26 @@ const resetPassword = async (req, res) => {
     );
     return sendSuccess(res, { message: "Password updated successfully" });
   } catch (err) {
-    console.error("Reset password error:", err);
     return sendError(res, 400, "Invalid or expired token")
   }
 };
 
-module.exports = { register, login, forgotPassword, resetPassword };
+const getToken = async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(401).json({ message: 'No refresh token provided' });
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const db = await connectToDatabase();
+    const users = db.collection('users');
+    const user = await users.findOne({ _id: new require("mongodb").ObjectId(decoded.id) });
+    if (!user || user.refreshToken !== refreshToken) {
+      return sendError(res, 403, "Invalid refresh token")
+    }
+    const newAccessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
+    return sendSuccess(res, { accessToken: newAccessToken });
+  } catch (err) {
+    return sendError(res, 403, "Invalid or expired refresh token")
+  }
+}
+
+module.exports = { register, login, forgotPassword, resetPassword, getToken };
