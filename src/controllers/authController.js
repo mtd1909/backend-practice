@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const { sendSuccess, sendError } = require("../helper/response");
 const { ObjectId } = require("mongodb");
-
+const { getDefaultUserData } = require('../models/user');
 require("dotenv").config();
 
 const register = async (req, res) => {
@@ -21,7 +21,11 @@ const register = async (req, res) => {
       return sendError(res, 400, "Username already exists.");
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = { email, username, password: hashedPassword, date_created: new Date() };
+    const newUser = getDefaultUserData({
+      email,
+      username,
+      password: hashedPassword,
+    });
     await users.insertOne(newUser);
     return sendSuccess(res, { message: "User registered successfully." });
   } catch (err) {

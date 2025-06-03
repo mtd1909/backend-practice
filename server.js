@@ -7,6 +7,7 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const connectToDatabase = require("./src/config/database");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const { getDefaultUserData } = require('./src/models/user');
 
 app.use(cors({ origin: "*" }));
 
@@ -50,14 +51,15 @@ passport.use(
 			const users = db.collection("users");
 			let user = await users.findOne({ googleId: profile.id });
 			if (!user) {
-				user = {
-					googleId: profile.id,
-					displayName: profile.displayName,
-					email: profile.emails[0].value,
-					avatar: profile.photos[0].value,
-          date_created: new Date()
-				};
-				await users.insertOne(user);
+        const overrides = {
+          googleId: profile.id,
+          email: profile.emails?.[0]?.value || null,
+          avatar: profile.photos?.[0]?.value || null,
+          fullName: profile.displayName || null,
+        };
+        const newUser = getDefaultUserData(overrides);
+				await users.insertOne(newUser);
+        user = newUser;
 			}
 			const jwtToken = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
 			user.jwtToken = jwtToken;
@@ -75,8 +77,10 @@ app.get("/auth/google/callback", passport.authenticate("google", { session: fals
 
 const userRoutes = require("./src/routes/user");
 const authRoutes = require("./src/routes/auth");
+const mediasRoutes = require("./src/routes/medias");
 app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
+app.use("/medias", mediasRoutes);
 
 const port = process.env.PORT || 8080;
 app.listen(port, function () {
