@@ -9,7 +9,7 @@ require("dotenv").config();
 
 const register = async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { email, username, password, fullName } = req.body;
     const db = await connectToDatabase();
     const users = db.collection("users");
     const existingEmail = await users.findOne({ email });
@@ -24,6 +24,7 @@ const register = async (req, res) => {
     const newUser = getDefaultUserData({
       email,
       username,
+      fullName,
       password: hashedPassword,
     });
     await users.insertOne(newUser);

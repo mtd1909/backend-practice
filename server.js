@@ -8,13 +8,18 @@ const connectToDatabase = require("./src/config/database");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const { getDefaultUserData } = require('./src/models/user');
+const registerSocket = require('./src/sockets/index')
+const { Server } = require("socket.io"); 
+const http = require('http');
+const server = http.createServer(app);
+
+const io = new Server(server, { cors: { origin: "*" } });
 
 app.use(cors({ origin: "*" }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session setup
 app.use(
 	session({
 		secret: process.env.SESSION_SECRET,
@@ -23,6 +28,10 @@ app.use(
 		cookie: { secure: false },
 	})
 );
+
+app.get('/', (req, res) => {
+  res.send('Hello from Express + Socket.IO!');
+})
 
 // Initialize passport and session
 app.use(passport.initialize());
@@ -78,11 +87,16 @@ app.get("/auth/google/callback", passport.authenticate("google", { session: fals
 const userRoutes = require("./src/routes/user");
 const authRoutes = require("./src/routes/auth");
 const mediasRoutes = require("./src/routes/medias");
+const messageRoutes = require("./src/routes/message");
 app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
 app.use("/medias", mediasRoutes);
+app.use("/message", messageRoutes);
 
 const port = process.env.PORT || 8080;
-app.listen(port, function () {
-	console.log(`App listening on port ${port}`);
+
+registerSocket(io);
+
+server.listen(port, () => {
+  console.log(`🚀 Server + Socket.IO running at http://localhost:${port}`);
 });
