@@ -9,20 +9,15 @@ const { ObjectId } = require("mongodb");
 const getUser = async (req, res) => {
   try {
   const db = await connectToDatabase();
-    const users = await db.collection("users").find().toArray();
-    
-    res.status(200).json({
-      code: 200,
-      message: "Lấy danh sách người dùng thành công",
-      data: users
-    });
+  const users = await db
+  .collection("users")
+  .find()
+  .project({ favorites: 0 })
+  .toArray();
+    return sendSuccess(res, users); 
   } catch (error) {
-    console.error("Lỗi:", error);
-    res.status(500).json({
-      code: 500,
-      message: "Lỗi server khi lấy danh sách người dùng",
-      error: error.message
-    });
+    console.error("Fetch users error:", error);
+    return sendError(res, 400, "Failed to fetch user list.");
   }
 };
 
@@ -170,5 +165,73 @@ const uploadAvatar = [
     return sendSuccess(res, { url });
   }
 ]
+
+const getContacts = async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const users = db.collection("users");
+    const currentUserId = req.user?.id;
+    if (!currentUserId) return sendError(res, 401, "Unauthorized");
+    const currentUser = await users.findOne({ _id: new ObjectId(currentUserId) });
+    const favoriteIds = (currentUser?.favorites || []).map(id => id.toString());
+    const contacts = await users
+      .find({ _id: { $ne: new ObjectId(currentUserId) } })
+      .project({ password: 0, favorites: 0 }) // ẩn những field nhạy cảm
+      .toArray();
+    const enrichedContacts = contacts.map(user => ({
+      ...user,
+      isFavorite: favoriteIds.includes(user._id.toString()),
+    }));
+    return sendSuccess(res, enrichedContacts);
+  } catch (error) {
+    console.error("Fetch contacts error:", error);
+    return sendError(res, 500, "Failed to fetch contacts.");
+  }
+};
+
+const toggleFavoriteUser = async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const users = db.collection("users");
+    const currentUserId = req.user?.id;
+    const targetUserId = req.params.targetUserId;
+    if (!currentUserId || !targetUserId) {
+      return sendError(res, 400, "Missing user ID.");
+    }
+    const currentUser = await users.findOne({ _id: new ObjectId(currentUserId) });
+    const isAlreadyFavorite = (currentUser?.favorites || []).some(
+      id => id.toString() === targetUserId
+    );
+    const update = isAlreadyFavorite
+      ? { $pull: { favorites: new ObjectId(targetUserId) } }
+      : { $addToSet: { favorites: new ObjectId(targetUserId) } };
+    await users.updateOne({ _id: new ObjectId(currentUserId) }, update);
+    return sendSuccess(res, {
+      message: isAlreadyFavorite ? "Removed from favorites" : "Added to favorites",
+      isFavorite: !isAlreadyFavorite,
+    });
+  } catch (error) {
+    console.error("Toggle favorite error:", error);
+    return sendError(res, 500, "Failed to toggle favorite.");
+  }
+};
+
+const getFavoriteUsers = async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const users = db.collection("users");
+    const currentUserId = req.user?.id;
+    const currentUser = await users.findOne({ _id: new ObjectId(currentUserId) });
+    const favoriteIds = currentUser?.favorites || [];
+    const favoriteUsers = await users
+      .find({ _id: { $in: favoriteIds } })
+      .project({ password: 0 })
+      .toArray();
+    return sendSuccess(res, favoriteUsers);
+  } catch (error) {
+    console.error("Get favorites error:", error);
+    return sendError(res, 500, "Failed to fetch favorite users.");
+  }
+};
 // 🟢 Xuất các function để dùng trong routes
-module.exports = { getUser, createUser, updateUser, deleteUser, getProfile, uploadAvatar };
+module.exports = { getUser, createUser, updateUser, deleteUser, getProfile, uploadAvatar, getContacts, toggleFavoriteUser, getFavoriteUsers };

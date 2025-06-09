@@ -26,8 +26,6 @@ const uploadImage = async (req, res) => {
       folder: "my_uploads", // Tùy chọn: lưu ảnh vào folder
     });
     fs.unlinkSync(path); // Xoá file tạm sau khi upload
-    console.log(result);
-    
     return sendSuccess(res, {
       url: result.secure_url,
     });

@@ -33,8 +33,6 @@ exports.getPrivateMessages = async (req, res) => {
 
     const db = await connectToDatabase();
     const messages = db.collection("messages");
-    console.log(messages);
-    
     const result = await messages
       .find({
         $or: [
@@ -44,8 +42,6 @@ exports.getPrivateMessages = async (req, res) => {
       })
       .sort({ createdAt: 1 })
       .toArray();
-      console.log(result);
-      
     return res.json(result);
   } catch (error) {
     console.error("getPrivateMessages error:", error);

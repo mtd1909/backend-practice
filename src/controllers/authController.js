@@ -87,8 +87,6 @@ const forgotPassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
-  console.log("Received token:", token);
-  console.log("JWT_SECRET:", process.env.JWT_SECRET);
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const db = await connectToDatabase();
