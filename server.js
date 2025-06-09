@@ -20,32 +20,32 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-	session({
-		secret: process.env.SESSION_SECRET,
-		resave: false,
-		saveUninitialized: false,
-		cookie: { secure: false },
-	})
-);
+// app.use(
+// 	session({
+// 		secret: process.env.SESSION_SECRET,
+// 		resave: false,
+// 		saveUninitialized: false,
+// 		cookie: { secure: false },
+// 	})
+// );
 
-app.get('/', (req, res) => {
-  res.send('Hello from Express + Socket.IO!');
-})
+// app.get('/', (req, res) => {
+//   res.send('Hello from Express + Socket.IO!');
+// })
 
 // Initialize passport and session
 app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.session());
 
 // Passport serialize user - lưu id vào session
-passport.serializeUser(function (user, done) {
-	done(null, user);
-});
+// passport.serializeUser(function (user, done) {
+// 	done(null, user);
+// });
 
-// Passport deserialize user - lấy user từ session
-passport.deserializeUser(function (user, done) {
-	done(null, user);
-});
+// // Passport deserialize user - lấy user từ session
+// passport.deserializeUser(function (user, done) {
+// 	done(null, user);
+// });
 
 // Google OAuth Strategy
 passport.use(
@@ -77,7 +77,7 @@ passport.use(
 	)
 );
 
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"], session: false }));
 app.get("/auth/google/callback", passport.authenticate("google", { session: false }), (req, res) => {
   const token = req.user.jwtToken;
   if (!token) return res.status(500).json({ message: "No token generated" });
