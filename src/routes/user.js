@@ -15,7 +15,8 @@ const {
 } = require("../controllers/userController");
 const router = express.Router();
 
-router.get("/", authenticateToken, getUser);
+router.get("/", getUser);
+// router.get("/", authenticateToken, getUser);
 router.post("/", createUser);
 router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);

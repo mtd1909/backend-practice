@@ -23,11 +23,10 @@ const createUser = async (req, res) => {
 		const db = await connectToDatabase();
 		const newUser = req.body;
 		const result = await db.collection("users").insertOne(newUser);
-
 		res.status(201).json({
 			code: 201,
 			message: "Tạo người dùng thành công",
-			data: { _id: result.insertedId, ...newUser },
+			data: { _id: result.insertedId, status: 1, ...newUser },
 		});
 	} catch (error) {
 		console.error("Lỗi:", error);
@@ -42,33 +41,24 @@ const createUser = async (req, res) => {
 // 🟢 Hàm cập nhật user
 const updateUser = async (req, res) => {
 	try {
+    const db = await connectToDatabase();
 		const { id } = req.params;
 		const updatedUser = req.body;
 		if (!ObjectId.isValid(id)) {
-			return res.status(400).json({
-				code: 400,
-				message: "ID không hợp lệ",
-			});
+			return sendError(res, 400, "Invalid user ID");
 		}
 		delete updatedUser._id;
-		const result = await db.collection("users").updateOne({ _id: new ObjectId(id) }, { $set: updatedUser });
+		const result = await db.collection("users").updateOne(
+			{ _id: new ObjectId(id) },
+			{ $set: updatedUser }
+		);
 		if (result.matchedCount === 0) {
-			return res.status(404).json({
-				code: 404,
-				message: "Không tìm thấy người dùng",
-			});
+			return sendError(res, 404, "User not found");
 		}
-		res.json({
-			code: 200,
-			message: "Cập nhật người dùng thành công",
-		});
+		return sendSuccess(res, { message: "User updated successfully" });
 	} catch (error) {
 		console.error("Lỗi:", error);
-		res.status(500).json({
-			code: 500,
-			message: "Lỗi server khi cập nhật người dùng",
-			error: error.message,
-		});
+		return sendError(res, 500, "Internal server error.");
 	}
 };
 
