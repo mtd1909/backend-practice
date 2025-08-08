@@ -7,7 +7,7 @@ const connectToDatabase = require("./src/config/database");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const { getDefaultUserData } = require('./src/models/user');
-const registerSocket = require('./src/sockets/index')
+const socketHandler = require('./src/sockets/index')
 const { Server } = require("socket.io"); 
 const http = require('http');
 const server = http.createServer(app);
@@ -94,7 +94,7 @@ app.use("/message", messageRoutes);
 
 const port = process.env.PORT || 8080;
 
-registerSocket(io);
+socketHandler(io);
 
 server.listen(port, () => {
   console.log(`🚀 Server + Socket.IO running at http://localhost:${port}`);

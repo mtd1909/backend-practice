@@ -261,6 +261,55 @@ const getBlockedUsers = async (req, res) => {
     return sendError(res, 500, "Failed to fetch blocked users.");
   }
 };
+
+const getConversationUsers = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 401, "Unauthorized");
+    }
+    const db = await connectToDatabase();
+    const messages = db.collection("messages");
+    const result = await messages
+      .aggregate([
+        {
+          $match: {
+            $or: [
+              { senderId: new ObjectId(userId) },
+              { receiverId: new ObjectId(userId) },
+            ],
+          },
+        },
+        {
+          $project: {
+            contactId: {
+              $cond: [
+                { $eq: ["$senderId", new ObjectId(userId)] },
+                "$receiverId",
+                "$senderId",
+              ],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$contactId",
+          },
+        },
+      ])
+      .toArray();
+      const users = db.collection("users");
+      const contactIds = result.map((item) => item._id);
+      const contacts = await users
+        .find({ _id: { $in: contactIds } })
+        .project({ fullName: 1, email: 1, avatar: 1 }) // tuỳ fields
+        .toArray();
+    return sendSuccess(res, contacts );
+  } catch (error) {
+    console.error("getConversationUsers error:", error);
+    return sendError(res, 500, "Internal Server Error");
+  }
+};
 // 🟢 Xuất các function để dùng trong routes
 module.exports = {
 	getUser,
@@ -274,4 +323,5 @@ module.exports = {
 	getFavoriteUsers,
 	toggleBlockUser,
 	getBlockedUsers,
+  getConversationUsers
 };

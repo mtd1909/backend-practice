@@ -1,12 +1,13 @@
 const connectToDatabase = require("../config/database");
 const { createMessageData, saveMessage } = require("../models/message");
 const { ObjectId } = require("mongodb");
-// Gửi tin nhắn qua HTTP (API REST)
-exports.sendMessage = async (req, res) => {
+const { sendSuccess, sendError } = require("../helper/response");
+
+const sendMessage = async (req, res) => {
   try {
     const { senderName, senderId, receiverId, text } = req.body;
     if (!senderName || !senderId || !receiverId || !text) {
-      return res.status(400).json({ message: "Missing fields" });
+      return sendError(res, 400, "Missing fields");
     }
 
     const db = await connectToDatabase();
@@ -15,20 +16,19 @@ exports.sendMessage = async (req, res) => {
     const newMessage = createMessageData({ senderName, senderId, receiverId, text });
     await messages.insertOne(newMessage);
 
-    return res.status(201).json(newMessage);
+    return sendSuccess(res, newMessage);
   } catch (error) {
     console.error("sendMessage error:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return sendError(res, 500, "Internal Server Error");
   }
 };
 
-// Lấy tin nhắn riêng giữa 2 người dùng
-exports.getPrivateMessages = async (req, res) => {
+const getPrivateMessages = async (req, res) => {
   try {
     const { user1, user2 } = req.params;
 
     if (!user1 || !user2) {
-      return res.status(400).json({ message: "Missing user IDs" });
+      return sendError(res, 400, "Missing user IDs");
     }
 
     const db = await connectToDatabase();
@@ -42,15 +42,15 @@ exports.getPrivateMessages = async (req, res) => {
       })
       .sort({ createdAt: 1 })
       .toArray();
-    return res.json(result);
+
+    return sendSuccess(res, result);
   } catch (error) {
     console.error("getPrivateMessages error:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return sendError(res, 500, "Internal Server Error");
   }
 };
 
-// Xử lý gửi tin nhắn qua Socket.IO
-exports.handlePrivateMessage = async (io, data, socket, onlineUsers) => {
+const handlePrivateMessage = async (io, data, socket, onlineUsers) => {
   try {
     const { senderName, senderId, receiverId, text } = data;
 
@@ -61,7 +61,7 @@ exports.handlePrivateMessage = async (io, data, socket, onlineUsers) => {
 
     const messageData = createMessageData({ senderName, senderId, receiverId, text });
     const savedMessage = await saveMessage(messageData);
-    
+
     console.log("✅ Message saved:", savedMessage);
     socket.emit("message-sent", savedMessage);
 
@@ -74,6 +74,40 @@ exports.handlePrivateMessage = async (io, data, socket, onlineUsers) => {
     }
   } catch (error) {
     console.error("handlePrivateMessage error:", error);
-    socket.emit("error", { message: "Không gửi được tin nhắn" });
+    socket.emit("error", { message: "Unable to send message" });
   }
+};
+
+const getMessageHistory = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, 401, "Unauthorized");
+    }
+
+    const db = await connectToDatabase();
+    const messages = db.collection("messages");
+
+    const result = await messages
+      .find({
+        $or: [
+          { senderId: new ObjectId(userId) },
+          { receiverId: new ObjectId(userId) },
+        ],
+      })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    return sendSuccess(res, result);
+  } catch (error) {
+    console.error("getMessageHistory error:", error);
+    return sendError(res, 500, "Internal Server Error");
+  }
+};
+
+module.exports = {
+	sendMessage,
+	getPrivateMessages,
+	handlePrivateMessage,
+	getMessageHistory,
 };

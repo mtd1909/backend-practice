@@ -12,6 +12,7 @@ const {
 	getFavoriteUsers,
 	toggleBlockUser,
 	getBlockedUsers,
+  getConversationUsers
 } = require("../controllers/userController");
 const router = express.Router();
 
@@ -27,5 +28,6 @@ router.post("/favorites/toggle/:targetUserId", authenticateToken, toggleFavorite
 router.get("/favorites", authenticateToken, getFavoriteUsers);
 router.post("/block/toggle/:targetUserId", authenticateToken, toggleBlockUser);
 router.get("/block", authenticateToken, getBlockedUsers);
+router.get("/conversation", authenticateToken, getConversationUsers);
 
 module.exports = router;
