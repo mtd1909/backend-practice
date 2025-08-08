@@ -68,7 +68,7 @@ const forgotPassword = async (req, res) => {
   const user = await users.findOne({ email });
   if (!user) return sendError(res, 400, "Email not found.");
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
-  const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+  const resetLink = `https://appchat-mtd.vercel.app/reset-password?token=${token}`;
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
